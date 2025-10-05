@@ -37,8 +37,8 @@ async function adminAllCourses(req, res){
 adminRouter.post("/signup", adminSignup);
 adminRouter.post("/signin", adminSignin);
 adminRouter.post("/course/Create", adminCreateCourse);
-adminRouter.post("/course/update", adminUpdateCourse);
-adminRouter.post("/course/all", adminAllCourses);
+adminRouter.put("/course/update", adminUpdateCourse);
+adminRouter.get("/course/all", adminAllCourses);
 
 module.exports = {
     adminRouter : adminRouter
