@@ -1,6 +1,7 @@
 const {Router} = require("express");
 
 const courseRouter = Router();
+const {courseModel} = require("../db")
 
 async function coursePreview(req, res ){
     res.json({

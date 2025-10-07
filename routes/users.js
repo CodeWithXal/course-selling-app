@@ -9,6 +9,8 @@ const jwt_secret = "123asd";
 const {Router} = require("express"); 
 const userRouter = Router();
 
+const {userModel} = require("../db")
+
 
 
 
