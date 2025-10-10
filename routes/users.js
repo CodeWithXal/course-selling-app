@@ -1,8 +1,8 @@
-require(dotenv).config();
+require("dotenv").config();
 const { z } = require("zod");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const jwt_secret = process.env.JWT_SECRET;
+const jwt_secret = process.env.JWT_USER_SECRET;
 // const express = require("express");
 // const Router = express.Router;
 
@@ -11,43 +11,29 @@ const {Router} = require("express");
 const userRouter = Router();
 
 const {userModel} = require("../db")
+const {authMiddleware} = require("../middleware/authentication")
 
 
-// --- AUTHENTICATION MIDDLEWARE ---
+// --- AUTHENTICATION ---
 
-function auth(req, res, next){
-    const token = req.header.authorization;
-
-    if(!token){
-        res.status(401).json({
-            message : "No Token provided"
-        });
-    }
-
-
-    try{
-        const decoded = jwt.verify(token, jwt_secret);
-        req.userId = decoded.id;
-        next();
-    }
-    catch(err){
-        res.status(401).json({
-            message : "Invalid Token"
-        });
-    }
-}
+const userAuth = authMiddleware(jwt_secret);
 
 
 // --- USER SIGNUP FUNCTION ---
 
 async function userSignup(req, res){
+    const username = req.body.username;
     const email = req.body.email;
     const password = req.body.password;
-    const name = req.body.name;
+    const firstName = req.body.firstName;
+    const lastName = req.body.lastName;
+
 
     // input validation
 
     const requiredBody = z.object({
+        username: z.string().min(3, "Name must be at least 3 characters")
+                       .max(50, "Name must be at most 50 characters"),
         email: z.string().min(3, "Email must be at least 3 characters")
                           .max(50, "Email must be at most 50 characters")
                           .email("Invalid email format"),
@@ -55,8 +41,11 @@ async function userSignup(req, res){
                             .max(50, "Password must be at most 50 characters")
                             .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
                             .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character"),
-        name: z.string().min(3, "Name must be at least 3 characters")
+        firstName: z.string().min(3, "Name must be at least 3 characters")
+                       .max(50, "Name must be at most 50 characters"),
+        lastName: z.string().min(3, "Name must be at least 3 characters")
                        .max(50, "Name must be at most 50 characters")
+
     });
 
     const parsedData = requiredBody.safeParse(req.body);
@@ -81,9 +70,11 @@ async function userSignup(req, res){
 
         const hashed_password = await bcrypt.hash(password, 5);
         await userModel.create({
+            username,
             email,
             password : hashed_password,
-            name 
+            firstName,
+            lastName
         });
 
         return res.json({
@@ -106,12 +97,10 @@ async function userSignin(req, res){
     const email = req.body.email;
     const password = req.body.password;
 
-    const user = userModel.findone({
-        email : email
-    })
+    const user = await userModel.findOne({email})
 
     if(!user){
-        res.status(403).json({
+        return res.status(403).json({
             message : "User doesn't exists"
         })
     }
@@ -135,8 +124,8 @@ async function userSignin(req, res){
 }
 
 
-userRouter.post("/signup", auth, userSignup);
-userRouter.post("/signin", auth, userSignin);
+userRouter.post("/signup", userSignup);
+userRouter.post("/signin", userSignin);
 // userRouter.get("/purchases", userPurchases);
 
 
