@@ -1,7 +1,8 @@
+require(dotenv).config();
 const { z } = require("zod");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const jwt_secret = "123asd";
+const jwt_secret = process.env.JWT_SECRET;
 // const express = require("express");
 // const Router = express.Router;
 
@@ -12,7 +13,7 @@ const userRouter = Router();
 const {userModel} = require("../db")
 
 
-
+// --- AUTHENTICATION MIDDLEWARE ---
 
 function auth(req, res, next){
     const token = req.header.authorization;
@@ -36,6 +37,8 @@ function auth(req, res, next){
     }
 }
 
+
+// --- USER SIGNUP FUNCTION ---
 
 async function userSignup(req, res){
     const email = req.body.email;
@@ -66,7 +69,7 @@ async function userSignup(req, res){
         }));
 
         res.status(400).json({
-            message : "Incorrest Format",
+            message : "Incorrect Format",
             error : errMsg
         });
         return;
@@ -98,6 +101,7 @@ async function userSignup(req, res){
 
 }
 
+// --- USER SIGNIN FUNCTION ---
 async function userSignin(req, res){
     const email = req.body.email;
     const password = req.body.password;
@@ -131,8 +135,8 @@ async function userSignin(req, res){
 }
 
 
-userRouter.post("/signup", userSignup);
-userRouter.post("/signin",userSignin);
+userRouter.post("/signup", auth, userSignup);
+userRouter.post("/signin", auth, userSignin);
 // userRouter.get("/purchases", userPurchases);
 
 
