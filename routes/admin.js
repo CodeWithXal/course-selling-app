@@ -124,29 +124,77 @@ async function adminCreateCourse(req, res){
     const adminId = req.userId;
     const {title, description, price, imageUrl} = req.body;
 
-    const create = await courseModel.create({
+    const course = await courseModel.create({
         title: title,
         description: description,
         price: price,
-        imageUrl: imageUrl,
+        imageUrl: imageUrl,  // create a pipeline for user to upload image directly
         creatorId: adminId
     })
     res.json({
         message : "course created successfully",
-        courseId: create._id
+        courseId: course._id
     });
 }
 
 async function adminUpdateCourse(req, res){
-    res.json({
-        message : "admin change/update course endpoint"
-    });
+
+    try{
+        const adminId = req.userId;
+        const {courseId, title, description, price, imageUrl} = req.body;
+
+        const course = await courseModel.findById(courseId);
+
+        if(!course){
+            return res.status(404).json({
+                message: "course noot found"
+            });
+        }
+
+        // check whwther the admin is same 
+
+        if(course.creatorId.toString() !== adminId){
+            return res.status(403).json({
+                message: "You are mot authorized to update this course"
+            });
+        }
+
+        if(title) course.title = title;
+        if(description) course.description = description;
+        if(price) course.price = price;
+        if(imageUrl) course.imageUrl = imageUrl;
+
+        await course.save();
+
+        res.json({
+            message : "course updaated successfully",
+            updatedCourse : course
+        });
+    }catch(err){
+        res.status(500).json({
+            message: "error updating course",
+            error: err.message
+        })
+    }
 }
 
 async function adminAllCourses(req, res){
-    res.json({
-        message : "admin get all courses endpoint"
-    });
+
+    try{
+        // if you wamt to only fetch the courses created by the admin 
+        // const adminId = req.userId;
+        const courses = await courseModel.find(); // replace with courseModel.find({creatorId : adminId})
+        res.json({
+            message : "all courses fetched succcessfully",
+            totalCourses : courses.length,
+            courses : courses
+        });
+    }catch(err){
+        res.status(500).json({
+            message : "error fetching courses",
+            error : err.message
+        })
+    }
 }
 
 
