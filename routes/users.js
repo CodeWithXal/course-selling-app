@@ -124,21 +124,43 @@ async function userSignin(req, res){
 }
 
 async function userPurchases(req, res){
-    const userId = req.userId;
+    try{
+        const userId = req.userId;
 
-    const purchases = await purchaseModel.find({
-        userId
-    })
+        const purchases = await purchaseModel.find({
+            userId
+        })
+        .populate("courseId", "title description price") // choose fields you want to display
+        .exec();
 
-    res.json({
-        purchases
-    });
+        if(!purchases.length){
+
+            return res.json({
+                message : "No purshases yet"
+            });
+        }
+
+        // extract the populated courses
+
+        const purchasedCourses = purchases.map((purchase)=>purchase.courseId);
+
+        res.json({
+            message : "Your Purchases",
+            total : purchasedCourses.length,
+            purchasedCourses
+        })
+    }catch(err){
+        console.log("error fetching purchases",err);
+        res.json({
+            message : "Error fetching courses"
+        });
+    }
 }
 
 
 userRouter.post("/signup", userSignup);
 userRouter.post("/signin", userSignin);
-userRouter.get("/purchases", userPurchases);
+userRouter.get("/purchases",userAuth, userPurchases);
 
 
 module.exports = {

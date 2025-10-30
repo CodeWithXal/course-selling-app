@@ -2,6 +2,9 @@ const {Router} = require("express");
 const {authMiddleware} = require("../middleware/authentication")
 const courseRouter = Router();
 const {courseModel, purchaseModel} = require("../db")
+const jwt_secret = process.env.JWT_USER_SECRET;
+
+const auth = authMiddleware(jwt_secret);
 
 async function course_purchase(req, res){
     const userId = req.userId;
@@ -30,7 +33,7 @@ async function coursePreview(req, res ){
     });
 }
 courseRouter.get("/preview", coursePreview);
-courseRouter.post("/purchase", authMiddleware, course_purchase)
+courseRouter.post("/purchase", auth, course_purchase)
 
 
 module.exports = {
