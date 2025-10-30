@@ -10,7 +10,7 @@ const jwt_secret = process.env.JWT_USER_SECRET;
 const {Router} = require("express"); 
 const userRouter = Router();
 
-const {userModel} = require("../db")
+const {userModel, purchaseModel} = require("../db")
 const {authMiddleware} = require("../middleware/authentication")
 
 
@@ -123,10 +123,22 @@ async function userSignin(req, res){
     }
 }
 
+async function userPurchases(req, res){
+    const userId = req.userId;
+
+    const purchases = await purchaseModel.find({
+        userId
+    })
+
+    res.json({
+        purchases
+    });
+}
+
 
 userRouter.post("/signup", userSignup);
 userRouter.post("/signin", userSignin);
-// userRouter.get("/purchases", userPurchases);
+userRouter.get("/purchases", userPurchases);
 
 
 module.exports = {
