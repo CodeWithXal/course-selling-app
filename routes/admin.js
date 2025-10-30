@@ -182,8 +182,8 @@ async function adminAllCourses(req, res){
 
     try{
         // if you wamt to only fetch the courses created by the admin 
-        // const adminId = req.userId;
-        const courses = await courseModel.find(); // replace with courseModel.find({creatorId : adminId})
+        const adminId = req.userId;
+        const courses = await courseModel.find({creatorId : adminId})
         res.json({
             message : "all courses fetched succcessfully",
             totalCourses : courses.length,
